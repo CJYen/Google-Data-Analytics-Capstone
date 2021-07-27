@@ -1,0 +1,96 @@
+---
+title: "analyze_cyclistic"
+author: "CJ"
+date: "7/23/2021"
+output: html_document
+---
+Load data frame
+```{r}
+load("Cyclistic-Trips-Data.RData")
+load("Cyclistic-Stations.RData")
+```
+
+Required packages
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(leaflet)
+library(mapview)
+```
+
+Number of rides
+```{r}
+ridership <- trips_cleaned %>%
+  group_by(member_casual) %>% 
+  summarize(count = n(), .groups="drop")
+```
+
+Previz - Number of rides
+```{r}
+ridership_viz<-ggplot(ridership) +
+  geom_bar(aes(member_casual,y=count), position = "dodge", stat="identity")
+ridership_viz
+```
+
+Rides by months
+```{r}
+rides_monthly <- trips_cleaned %>%
+  group_by(month = month(started_at, label = TRUE), member_casual) %>%
+  summarize(count = n(), .groups = "drop")
+```
+
+Previz - Rides by months
+```{r}
+rides_monthly %>%  
+  ggplot(aes(x = month, y = count, fill = member_casual)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  labs(
+    title = "Total Rides by Month",
+    fill = "Ridership",
+    x = NULL,
+    y = "Number of rides") +
+  theme(legend.position = "bottom") 
+```
+
+Ride by week
+```{r}
+rides_weekly <- trips_cleaned %>%
+  group_by(day_of_week, member_casual) %>%
+  summarize(count = n(), .groups = "drop") %>%
+  arrange(match(day_of_week,c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")))
+```
+
+Previz - Ride by week
+```{r}
+rides_weekly$day_of_week <- fct_inorder(rides_weekly$day_of_week)
+rides_weekly %>%  
+  ggplot(aes(x = day_of_week, y = count, fill = member_casual)) +
+  geom_bar(position = "dodge", stat="identity") +
+  labs(
+    title = "Total Rides by Day-of-Week",
+    fill = "Ridership",
+    x = NULL,
+    y = "Number of rides") +
+  theme(legend.position = "bottom") 
+```
+
+Setup the riding duration
+```{r}
+trips_cleaned$ride_length <- difftime(trips_cleaned$ended_at,trips_cleaned$started_at)
+```
+
+Convert the riding duration to Numeric Value
+```{r}
+trips_cleaned$ride_length <- as.numeric(as.character(trips_cleaned$ride_length))
+```
+
+Save and export the files
+```{r}
+write.csv(ridership, file = "cyclistic-ridership.csv")
+write.csv(rides_weekly,file = "cyclistic-rides-of-week.csv")
+write.csv(rides_monthly,file ="cyclistic-rides-of-month.csv")
+write.csv(trips_cleaned,file ="cyclistic-trips-data.csv")
+```
+
+

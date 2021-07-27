@@ -1,0 +1,70 @@
+---
+title: "cleaned_cyclistic"
+author: "CJ"
+date: "7/21/2021"
+output: html_document
+---
+### 1. Enviorment setup
+Required packages
+```{r}
+library(tidyverse)
+library(lubridate)
+library(skimr)
+library(dplyr)
+```
+
+```{r}
+trips_cleaned <- read.csv("Cyclistic-Trip-Data-clean-incorrect-stations.csv")
+```
+
+Clean up trips time
+```{r}
+trips_all <- trips_cleaned %>%
+  mutate(
+    trips_time = difftime(ended_at, started_at, units = "mins")) %>%
+  mutate(trips_time = as.numeric(trips_time))
+```
+
+```{r}
+trips <- trips_all %>%
+  filter(trips_time > 0)
+```
+
+Set up the week day
+```{r}
+trips <- trips %>%
+  mutate(day_of_week = wday(started_at, label = TRUE, week_start = 1))
+```
+
+Create a data frame for station map
+```{r}
+stations <- select(trips, c(
+  start_station_name, member_casual, start_lat, start_lng)) %>%
+  group_by(start_station_name, member_casual, start_lat, start_lng) %>%
+  summarize(num_rides = n(), .groups = "drop") %>%
+  arrange(., desc(num_rides)) %>%
+  filter(num_rides > 500 )
+```
+
+Create a pivot data frame
+```{r}
+trips_cleaned <- select(trips, -c(
+  start_station_id, end_station_id,
+  start_station_name, end_station_name,
+  start_lat, start_lng, end_lat, end_lng, ride_id))
+```
+
+Save and export the data frame for analyze
+```{r}
+save(stations, file = "Cyclistic-Stations.RData")
+save(trips_cleaned, file = "Cyclistic-Trips-Data.RData")
+```
+
+```{r}
+write.csv(stations, file = "Cyclistic-Stations.csv")
+write.csv(trips_cleaned, file = "Cyclistic-Trips-Data.csv")
+```
+
+
+
+

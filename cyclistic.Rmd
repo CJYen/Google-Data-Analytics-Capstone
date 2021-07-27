@@ -1,0 +1,69 @@
+---
+title: "Cyclistic"
+author: "CJ"
+date: "6/29/2021"
+output: html_document
+---
+### 1. Enviorment setup
+Required packages
+```{r}
+library(tidyverse)
+library(lubridate)
+library(skimr)
+library(dplyr)
+```
+
+
+### 2. Load Datasets
+Read CSV files
+```{r}
+jun_2020 <- read.csv("202006-divvy-tripdata.csv")
+jul_2020 <- read.csv("202007-divvy-tripdata.csv")
+aug_2020 <- read.csv("202008-divvy-tripdata.csv")
+sep_2020 <- read.csv("202009-divvy-tripdata.csv")
+oct_2020 <- read.csv("202010-divvy-tripdata.csv")
+nov_2020 <- read.csv("202011-divvy-tripdata.csv")
+dec_2020 <- read.csv("202012-divvy-tripdata.csv")
+jan_2021 <- read.csv("202101-divvy-tripdata.csv")
+feb_2021 <- read.csv("202102-divvy-tripdata.csv")
+mar_2021 <- read.csv("202103-divvy-tripdata.csv")
+apr_2021 <- read.csv("202104-divvy-tripdata.csv")
+may_2021 <- read.csv("202105-divvy-tripdata.csv")
+```
+
+
+After files checked, merge all CSV files into one data frame
+```{r}
+trips <- rbind(jun_2020, jul_2020, aug_2020, sep_2020, oct_2020, nov_2020, dec_2020, jan_2021, feb_2021, mar_2021, apr_2021, may_2021)
+```
+
+### 3. DATA PROCESSING
+Define missing values
+```{r}
+missing_values <-sapply(trips, function(x) sum(is.na(x))) %>%
+  as.data.frame()
+```
+
+Calculate the amount of missing values
+```{r}
+missing_values %>%
+  ggplot(aes(x = rownames(missing_values), y = .)) + geom_bar(stat = "identity")
+```
+
+Define the incorrect values
+```{r}
+station_incorrect <- c("","WATSON TESTING - DIVVY", "HUBBARD ST BIKE CHECKING (LBS-WH-TEST)")
+```
+
+Clean up incorrect values
+```{r}
+trips_cleaned <- trips %>%
+  filter(!(start_station_name %in% station_incorrect)) %>%
+  filter(!(end_station_name %in% station_incorrect))
+```
+
+Save and export the cleaned data frame
+```{r}
+save(trips_cleaned, file = "Cyclistic-Trip-Data-clean-incorrect-stations.RData")
+write.csv(trips_cleaned, file = "Cyclistic-Trip-Data-clean-incorrect-stations.csv")
+```
